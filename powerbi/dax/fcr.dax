@@ -1,0 +1,13 @@
+-- Measure: FCR
+-- Description: Calculates commulative feed conversion rate over time
+
+Cumulative FCR = 
+VAR SelectedDate = MAX('dim_date'[Date])
+VAR TotalFeed =
+    CALCULATE(
+        SUM(daily_records[feed_eaten]),
+        FILTER(ALL(daily_records), daily_records[record_date] <= SelectedDate)
+    )
+VAR Biomass = [Biomass on Selected Date]
+RETURN
+DIVIDE(TotalFeed, Biomass, 0)

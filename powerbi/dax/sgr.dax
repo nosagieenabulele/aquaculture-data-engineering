@@ -1,0 +1,53 @@
+-- Measure: SGR (%)
+-- Description: Calculates specific growth rate per batch over time
+-- Grain: Batch / Date
+
+SGR (%) = 
+VAR StartDate = MIN('dim_date'[Date])
+VAR EndDate   = MAX('dim_date'[Date])
+
+-- Find nearest actual biomass record ON or AFTER StartDate
+VAR StartRecordDate =
+    CALCULATE(
+        MIN(weekly_check[record_date]),
+        FILTER(
+            ALL(weekly_check),
+            weekly_check[record_date] >= StartDate
+        )
+    )
+
+-- Find nearest actual biomass record ON or BEFORE EndDate
+VAR EndRecordDate =
+    CALCULATE(
+        MAX(weekly_check[record_date]),
+        FILTER(
+            ALL(weekly_check),
+            weekly_check[record_date] <= EndDate
+        )
+    )
+
+-- Average weight at start record
+VAR AvgWeightStart =
+    CALCULATE(
+        DIVIDE(SUM(weekly_check[biomas]), SUM('batch'[current_count]), 0),
+        weekly_check[record_date] = StartRecordDate
+    )
+
+-- Average weight at end record
+VAR AvgWeightEnd =
+    CALCULATE(
+        DIVIDE(SUM(weekly_check[biomas]), SUM('batch'[current_count]), 0),
+        weekly_check[record_date] = EndRecordDate
+    )
+
+-- Number of days between the actual records
+VAR DaysBetween = DATEDIFF(StartRecordDate, EndRecordDate, DAY)
+
+RETURN
+IF(
+    NOT ISBLANK(AvgWeightStart)
+    && NOT ISBLANK(AvgWeightEnd)
+    && DaysBetween > 0,
+    ((LN(AvgWeightEnd) - LN(AvgWeightStart)) / DaysBetween) * 100,
+    BLANK()
+)

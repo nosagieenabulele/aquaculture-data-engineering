@@ -1,0 +1,7 @@
+pandas
+mysql-connector-python
+gspread
+oauth2client
+python-dotenv
+SQLAlchemy
+pymysql
