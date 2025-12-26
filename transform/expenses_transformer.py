@@ -26,10 +26,10 @@ logger = get_logger(__name__)
 class ExpensesTransformer:
     # expected/standardized column names (normalize_columns -> snake_case)
     EXPECTED_DATE_COL = "record_date"
-    STRING_COLS = ["category", "item", "vendor"]
-    NUMERIC_COLS = ["amount", "quantity", "cost"]
+    STRING_COLS = ["category", "item", "vendor", "description"]
+    NUMERIC_COLS = ["cost", "quantity"]
 
-    def transform(self, raw_df: pd.DataFrame) -> Optional[pd.DataFrame]:
+    def transform(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
         """
         Transform raw expenses sheet into a cleaned DataFrame.
 
@@ -40,12 +40,22 @@ class ExpensesTransformer:
          - normalize string columns (trim/lower/null)
          - clean numeric columns (remove separators, coerce)
         """
-        if raw_df is None or raw_df.empty:
+        if df is None or df.empty:
             logger.warning("[ExpensesTransformer] Empty raw dataframe")
             return pd.DataFrame()
 
         # Normalize headers first so configured column names match
-        df = normalize_columns(raw_df)
+        df = normalize_columns(df, scan_limit=5)
+
+        column_mapping = {
+            'timestamp': 'purchase_date',
+            'item': 'item',
+            'supplier': 'vendor',
+            'description': 'description',
+            'quantity': 'quantity',
+            'cost': 'cost',
+        }
+        df = df.rename(columns=column_mapping)
 
         # Clean date column if present
         if self.EXPECTED_DATE_COL in df.columns:

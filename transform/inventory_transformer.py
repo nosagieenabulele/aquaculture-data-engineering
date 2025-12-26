@@ -30,13 +30,26 @@ class InventoryTransformer:
     STRING_COLS = ["name", "category", "manufacturer"]
     DATE_COLS = ["date_purchased"]
 
-    def transform(self, raw_df: pd.DataFrame) -> Optional[pd.DataFrame]:
-        if raw_df is None or raw_df.empty:
+    def transform(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
+        if df is None or df.empty:
             logger.warning("[InventoryTransformer] Empty raw dataframe")
             return pd.DataFrame()
 
         # 1. Normalize column names
-        df = normalize_columns(raw_df)
+        df = normalize_columns(df)
+        column_mapping = {
+            'name': 'name',
+            'date_purchased': 'date_purchased',
+            'item_no.': 'category',
+            'stock_quantity': 'quantity',
+            'unit': 'unit',
+            'cost_per_item': 'cost',
+            'manufacturer': 'manufacturer',
+            'date_purchased': 'date_purchased',
+        }
+        df = df.rename(columns=column_mapping)
+        logger.info(f"[InventoryTransformer] Columns after normalization: {list(df.columns)}")
+        print (f"Columns after normalization: {list(df.columns)}")
 
         # 2. Clean string fields
         df = clean_string_columns(df, self.STRING_COLS)

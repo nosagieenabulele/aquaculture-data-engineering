@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 
 class DailyRecordTransformer:
     # standardized/expected column names after normalization
-    EXPECTED_DATE_COL = "timestamp"
+    EXPECTED_DATE_COL = "record_date"
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -45,26 +45,50 @@ class DailyRecordTransformer:
             return pd.DataFrame()
 
         # Normalize headers so configured field names match
-        df = normalize_columns(df)
-
+        df = normalize_columns(df, scan_limit=5)
+        column_mapping = {
+            'timestamp': 'record_date',
+            'feed_eaten(gram)': 'feed_eaten',
+            'mortality': 'mortality',  
+            'fish_behaviour': 'fish_behaviour',
+            '': 'feed_size',
+            '0': 'feed_eaten',
+            'note': 'notes',
+            'temperature': 'temperature', 
+            'week': 'week_no',
+            'pond_id': 'pond_name',
+        }
+        df =df.rename(columns=column_mapping)
         # Parse and standardize date column (handles Excel serials)
         if self.EXPECTED_DATE_COL in df.columns:
             df = clean_date_column(df, self.EXPECTED_DATE_COL)
 
         # Clean numeric columns: remove separators and coerce to numeric dtype
-        numeric_cols = ["feed_eaten_(gram)", "mortality"]
+        numeric_cols = ["feed_eaten", "mortality", "week_no", "feed_allocated_(grams)"]
         df = clean_numeric_columns(df, numeric_cols)
 
         # Clean temperature column if present (supports "temperature")
         if "temperature" in df.columns:
             df = clean_temperature_column(df, "temperature")
-        elif "water_temperature" in df.columns:
-            df = clean_temperature_column(df, "water_temperature")
 
+        df = clean_date_column(df, "record_date")
+        
         # Clean text fields: trim, lowercase, normalize null tokens
-        text_cols = ["fish_behaviour", "feed_size", "note"]
+        text_cols = ["fish_behaviour", "feed_size", "notes"]
         df = clean_string_columns(df, text_cols)
 
         logger.info("[DailyRecordTransformer] Transformation complete.")
-        return df
 
+        # Drop rows with more than 70% missing values ---
+        total_cols = len(df.columns)
+        min_non_nulls = int(total_cols * 0.60) 
+        
+        # Capture indices of rows to be dropped for logging
+        initial_count = len(df)
+        df = df.dropna(thresh=min_non_nulls)
+        dropped_count = initial_count - len(df)
+        
+        if dropped_count > 0:
+            logger.info(f"[DailyRecordTransformer] Dropped {dropped_count} rows with > 50% missing data.")
+        # -------------------------------------------------------
+        return df

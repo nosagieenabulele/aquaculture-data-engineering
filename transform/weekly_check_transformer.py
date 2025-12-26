@@ -26,7 +26,17 @@ class WeeklyCheckTransformer:
 
         # Normalize columns
         df = normalize_columns(df)
-
+        column_mapping = {
+            'avg._weight_(g)': 'average_weight',
+            'weight_gain_fish\n_(g)': 'weight_gain',
+            'biomas_(kg)': 'biomas',
+            'week': 'week_no',
+            'note': 'notes',
+            'sgr_(%)': 'sgr',
+            'fcr': 'fcr',
+        }
+        df = df.rename(columns=column_mapping)
+        print (f"Columns after normalization: {list(df.columns)}")
         # Clean date column
         if self.DATE_COL in df.columns:
             df = clean_date_column(df, self.DATE_COL)

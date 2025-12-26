@@ -22,27 +22,30 @@ class ExpensesLoader(SQLLoaderBase):
 
     INSERT_QUERY = """
         INSERT INTO expenses (
-            record_date,
-            category,
+            purchase_date,
+            item,
             vendor,
-            amount,
-            notes
+            description,
+            quantity,
+            cost
         )
         VALUES (
-            :record_date,
-            :category,
+            :purchase_date,
+            :item,
             :vendor,
-            :amount,
-            :notes
+            :description,
+            :quantity,
+            :cost
         )
     """
 
     EXPECTED_COLUMNS: List[str] = [
-        "record_date",
-        "category",
-        "vendor",
-        "amount",
-        "notes"
+            'purchase_date',
+            'item',
+            'vendor',
+            'description',
+            'quantity',
+            'cost',
     ]
 
     def load(self, df: pd.DataFrame) -> Optional[int]:

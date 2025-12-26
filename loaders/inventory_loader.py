@@ -33,23 +33,30 @@ class InventoryLoader(SQLLoaderBase):
     # INSERT maps DataFrame keys (named params) to the target DB columns.
     INSERT_QUERY = text("""
         INSERT INTO inventory (
-            item_name, category, quantity, unit, unit_price,
-            supplier, last_updated
+            name,
+            date_purchased,
+            category,
+            quantity,
+            cost,
+            manufacturer,
         )
         VALUES (
-            :item, :category, :quantity, :unit, :cost,
-            :manufacturer, :date_purchased
+            :name,
+            :date_purchased,
+            :category, 
+            :quantity, 
+            :cost,
+            :manufacturer
         )
     """)
 
     EXPECTED_COLUMNS: List[str] = [
-        "item",
-        "category",
-        "quantity",
-        "unit",
-        "cost",
-        "manufacturer",
-        "date_purchased"
+            'name',
+            'date_purchased',
+            'category',
+            'quantity',
+            'cost',
+            'manufacturer',
     ]
 
     def load(self, df: pd.DataFrame) -> Optional[int]:

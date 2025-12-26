@@ -22,8 +22,6 @@ class WeeklyCheckLoader(SQLLoaderBase):
     # SQL uses snake_case column names and parameter placeholders matching dataframe keys
     INSERT_QUERY = text("""
         INSERT INTO weekly_check (
-            record_date,
-            pond_id,
             average_weight,
             sgr,
             fcr,
@@ -32,8 +30,6 @@ class WeeklyCheckLoader(SQLLoaderBase):
             notes
         )
         VALUES (
-            :record_date,
-            :pond_id,
             :average_weight,
             :sgr,
             :fcr,
@@ -45,8 +41,6 @@ class WeeklyCheckLoader(SQLLoaderBase):
 
     # expected columns after normalize_columns (all lowercase / snake_case)
     EXPECTED_COLUMNS: List[str] = [
-        "record_date",
-        "pond_id",
         "average_weight",
         "sgr",
         "fcr",

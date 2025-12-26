@@ -1,7 +1,7 @@
 """
 Loader for Daily Record cleaned dataset (SQLAlchemy version).
 """
-
+import numpy as np
 import logging
 from typing import Optional, List
 import pandas as pd
@@ -22,57 +22,64 @@ class DailyRecordLoader(SQLLoaderBase):
     """
 
     # Use normalized column name 'record_date' to match DataFrame keys and EXPECTED_COLUMNS
-    INSERT_QUERY = """
-        INSERT INTO daily_record (
-            record_date, pond_id, feed_eaten, mortality, fish_behaviour,
-            feed_size, notes, water_temp
-        )
-        VALUES (
-            :record_date, :pond_id, :feed_eaten, :mortality, :fish_behaviour,
-            :feed_size, :notes, :water_temp
-        )
-    """
 
     EXPECTED_COLUMNS: List[str] = [
         "record_date",
-        "pond_id",
+        "pond_name",
         "feed_eaten",
         "mortality",
         "fish_behaviour",
         "feed_size",
         "notes",
-        "water_temp",
+        "temperature",
+        "week_no",
+
     ]
 
-    def load(self, df: pd.DataFrame) -> Optional[int]:
-        """
-        Load the cleaned daily record DataFrame into MySQL.
+    INSERT_QUERY = """
+        INSERT INTO daily_records (
+            record_date, pond_name, feed_eaten, mortality, fish_behaviour,
+            feed_size, notes, temperature, week_no
+        )
+        VALUES (
+            :record_date, :pond_name, :feed_eaten, :mortality, :fish_behaviour,
+            :feed_size, :notes, :temperature, :week_no
+        )
+    """
 
-        - Validates expected columns are present
-        - Uses _bulk_insert helper from SQLLoaderBase for performant, parameterized inserts
-        """
+    def load(self, df: pd.DataFrame) -> Optional[int]:
         if df is None or df.empty:
-            logger.warning("DailyRecordLoader received empty DataFrame.")
+            logger.warning("DailyRecordLoader: Nothing to load.")
             return None
 
-        # Validate required columns exist
+        # 1. Validation: Check if any required columns are missing from the transformation
         missing = [col for col in self.EXPECTED_COLUMNS if col not in df.columns]
         if missing:
-            logger.error(f"Missing required columns in DailyRecordLoader: {missing}")
+            logger.error(f"Schema Mismatch! DataFrame is missing: {missing}")
             return None
 
-        df_to_insert = df[self.EXPECTED_COLUMNS].copy()
-
         try:
+            # 2. Alignment: Filter to only expected columns AND fix the order
+            # This ensures df.columns matches the :params in the query
+            df_sync = df[self.EXPECTED_COLUMNS].copy()
+
+            # 3. NULL handling: Convert NaN/NAT to None so SQL recognizes them as NULL
+            # This follows the ELT principle of handling missing values in-DB
+            df_sync = df_sync.replace({np.nan: None})
+            
+            # 4. Optional: Force specific types if needed (e.g., ensuring numeric columns are floats)
+            # df_sync['water_temp'] = pd.to_numeric(df_sync['water_temp'], errors='coerce')
+
+            # 5. Execute bulk insert
             inserted = self._bulk_insert(
-                df=df_to_insert,
+                df=df_sync,
                 insert_query=self.INSERT_QUERY,
                 column_order=self.EXPECTED_COLUMNS,
             )
 
-            logger.info(f"DailyRecordLoader inserted {inserted} records successfully.")
+            logger.info(f"Successfully loaded {inserted} rows into daily_record.")
             return inserted
 
         except Exception as exc:
-            logger.error(f"DailyRecordLoader failed: {exc}", exc_info=True)
+            logger.error(f"Database Load Error: {exc}", exc_info=True)
             return None
