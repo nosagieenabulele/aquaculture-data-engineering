@@ -53,6 +53,17 @@ class WaterManagementTransformer:
         # temperature cleanup (if present)
         if self.TEMPERATURE_COL in df.columns:
             df = clean_temperature_column(df, self.TEMPERATURE_COL)
-
+        # Drop rows with more than 40% missing values ---
+        total_cols = len(df.columns)
+        min_non_nulls = int(total_cols * 0.60) 
+        
+        # Capture indices of rows to be dropped for logging
+        initial_count = len(df)
+        df = df.dropna(thresh=min_non_nulls)
+        dropped_count = initial_count - len(df)
+        
+        if dropped_count > 0:
+            logger.info(f"[WaterManagementTransformer] Dropped {dropped_count} rows with > 40% missing data.")
+        # -------------------------------------------------------
         logger.info("[WaterManagementTransformer] Done.")
         return df

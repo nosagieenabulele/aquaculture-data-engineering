@@ -38,7 +38,7 @@ class ExpensesLoader(SQLLoaderBase):
             :cost
         )
     """
-
+#  Use normalized column names matching the DataFrame keys and EXPECTED_COLUMNS
     EXPECTED_COLUMNS: List[str] = [
             'purchase_date',
             'item',

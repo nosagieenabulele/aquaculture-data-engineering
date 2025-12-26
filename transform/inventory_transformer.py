@@ -60,6 +60,17 @@ class InventoryTransformer:
         # 4. Clean date fields
         for col in self.DATE_COLS:
             df = clean_date_column(df, col)
-
+        # Drop rows with more than 40% missing values ---
+        total_cols = len(df.columns)
+        min_non_nulls = int(total_cols * 0.60) 
+        
+        # Capture indices of rows to be dropped for logging
+        initial_count = len(df)
+        df = df.dropna(thresh=min_non_nulls)
+        dropped_count = initial_count - len(df)
+        
+        if dropped_count > 0:
+            logger.info(f"[InventoryTransformer] Dropped {dropped_count} rows with > 40% missing data.")
+        # -------------------------------------------------------
         logger.info("[InventoryTransformer] Transformation complete.")
         return df

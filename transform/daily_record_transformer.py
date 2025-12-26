@@ -79,7 +79,7 @@ class DailyRecordTransformer:
 
         logger.info("[DailyRecordTransformer] Transformation complete.")
 
-        # Drop rows with more than 70% missing values ---
+        # Drop rows with more than 40% missing values ---
         total_cols = len(df.columns)
         min_non_nulls = int(total_cols * 0.60) 
         
@@ -89,6 +89,6 @@ class DailyRecordTransformer:
         dropped_count = initial_count - len(df)
         
         if dropped_count > 0:
-            logger.info(f"[DailyRecordTransformer] Dropped {dropped_count} rows with > 50% missing data.")
+            logger.info(f"[DailyRecordTransformer] Dropped {dropped_count} rows with > 40% missing data.")
         # -------------------------------------------------------
         return df

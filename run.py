@@ -71,27 +71,10 @@ def run_pipeline(pipeline_ref, sheet_url):
             logger.warning(f"{pipeline_class.__name__}: Transformation returned nothing.")
             return
 
-        # ✅ TRANSFORMATION METRICS
         logger.info(
             f"{pipeline_class.__name__}: Transformed {len(transformed)} rows "
             f"with columns: {list(transformed.columns)}"
         )
-
-# --- ADDED PRINT STATEMENTS ---
-        print("\n" + "="*50)
-        print(f"TRANSFORMED DATA PREVIEW: {pipeline_class.__name__}")
-        print("="*50)
-        print(transformed.iloc[900:910])  # Prints rows 900-910
-        print("-"*50)
-        print(f"Total Rows: {len(transformed)} | Columns: {list(transformed.columns)}")
-        print("="*50 + "\n")
-        # ------------------------------
-
-        print('fnull_counts:', transformed.isna().sum())
-        rows_with_any_nulls = transformed[transformed.isnull().any(axis=1)].index.tolist()
-        print(f"Indices of rows with at least one null value: {rows_with_any_nulls}")
-        print(f'dataset dtypes:\n{transformed.dtypes}')
-
 
         inserted = pipeline.load(transformed)
         logger.info(f"{pipeline_class.__name__}: Inserted {inserted or 0} rows.")
@@ -104,10 +87,10 @@ if __name__ == "__main__":
     # NOTE: keys here must match keys in GOOGLE_SHEETS.sheet_index_map (zero-based indices)
     PIPELINE_MAP = {
         "daily_record": "pipelines.daily_record_pipeline:DailyRecordPipeline",
-       # "expenses": "pipelines.expenses_pipeline:ExpensesPipeline",
-       # "inventory": "pipelines.inventory_pipeline:InventoryPipeline",
-        #"kpi_target": "pipelines.kpi_target_pipeline:KPITargetPipeline",
-      #  "weekly_check": "pipelines.weekly_check_pipeline:WeeklyCheckPipeline",
+        "expenses": "pipelines.expenses_pipeline:ExpensesPipeline",
+        "inventory": "pipelines.inventory_pipeline:InventoryPipeline",
+        "kpi_target": "pipelines.kpi_target_pipeline:KPITargetPipeline",
+        "weekly_check": "pipelines.weekly_check_pipeline:WeeklyCheckPipeline",
     }
 
     for name, ref in PIPELINE_MAP.items():

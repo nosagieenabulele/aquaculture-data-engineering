@@ -66,6 +66,17 @@ class ExpensesTransformer:
 
         # Clean numeric fields
         df = clean_numeric_columns(df, self.NUMERIC_COLS)
-
+        # Drop rows with more than 40% missing values ---
+        total_cols = len(df.columns)
+        min_non_nulls = int(total_cols * 0.60) 
+        
+        # Capture indices of rows to be dropped for logging
+        initial_count = len(df)
+        df = df.dropna(thresh=min_non_nulls)
+        dropped_count = initial_count - len(df)
+        
+        if dropped_count > 0:
+            logger.info(f"[ExpensesTransformer] Dropped {dropped_count} rows with > 40% missing data.")
+        # -------------------------------------------------------
         logger.info("[ExpensesTransformer] Transformation complete.")
         return df
